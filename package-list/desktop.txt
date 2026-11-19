@@ -1,5 +1,7 @@
 # Generated from SunshineOS/profile/packages.x86_64 by scripts/gen-lists.sh; edit the source list, not this file.
 plasma-desktop
+kdeplasma-addons
+inetutils
 plasma-nm
 plasma-pa
 plasma-systemmonitor

@@ -15,7 +15,7 @@ T=$(mktemp -d); trap 'rm -rf "$T"' EXIT
 # ---- sunshine-base
 B=$T/base; mkdir -p "$B/usr/bin" "$B/usr/share" "$B/usr/lib/systemd/user" "$B/etc/grub.d"
 for s in doctor identity info update update-notifier update-run toolbox welcome pet pods term prompt session session-notice set-shell \
-         snapshot snapshots-setup cleanup boot-repair fix-pacman fastfetch-patch hyprland-install plasma-setup nixos-grub crypt-setup repo apps webapp topbar update-check rescue kernel performance gaming drivers desktops toolsync migrate pacnew reset-plasma fix support backup state-hook health-scan game-run secureboot diagnose restore-visuals; do
+         snapshot snapshots-setup cleanup boot-repair fix-pacman fastfetch-patch hyprland-install plasma-setup nixos-grub crypt-setup repo apps webapp topbar update-check rescue kernel performance gaming drivers desktops toolsync migrate pacnew reset-plasma fix support backup state-hook health-scan game-run secureboot diagnose restore-visuals theme-wallpapers windfall-default; do
   [ -f "$A/usr/local/bin/sunshine-$s" ] && install -m755 "$A/usr/local/bin/sunshine-$s" "$B/usr/bin/sunshine-$s" || echo "note: sunshine-$s not in the checkout"
 done
 cp -a "$A"/usr/bin/sunshine-store* "$B/usr/bin/"
@@ -38,6 +38,12 @@ install -m755 "$HERE"/overlay/usr/bin/sunshine-converge "$HERE"/overlay/usr/bin/
 # the live-only pieces of the hook directory: none today; the rest refers to /usr/local/bin/sunshine-*
 grep -rlI '/usr/local/lib/sunshine/' "$B" 2>/dev/null | xargs -r sed -i 's#/usr/local/lib/sunshine/#/usr/lib/sunshine/#g'
 grep -rlI '/usr/local/bin/sunshine-' "$B" 2>/dev/null | xargs -r sed -i 's#/usr/local/bin/sunshine-#/usr/bin/sunshine-#g'
+# every pacman hook, systemd unit and menu entry in the package must run a Sunshine program that is in the package too: a tool that is
+# missing from the list above leaves a hook that fails on every update ("call to execv failed") and is only noticed on installed systems
+missing=$(grep -rhoE '^(Exec|ExecStart|ExecStartPre|ExecStartPost|ExecStop)[[:space:]]*=[[:space:]]*[-@!+:]*/usr/(bin|lib)/sunshine[^[:space:]]*' \
+            "$B/usr/share/libalpm/hooks" "$B/usr/lib/systemd" "$B/usr/share/applications" 2>/dev/null \
+          | sed -E 's/^[^=]*=[[:space:]]*[-@!+:]*//; s/[;"]+$//' | sort -u | while read -r p; do [ -e "$B$p" ] || echo "$p"; done)
+[ -z "$missing" ] || { echo "sunshine-base: referenced but not packaged (add them to the tool list):" $missing >&2; exit 1; }
 normalise "$B"; pack "$B" "$HERE/packages/sunshine-base/sunshine-base-src.tar.zst"
 echo "sunshine-base source: $(du -h "$HERE/packages/sunshine-base/sunshine-base-src.tar.zst" | cut -f1)"
 
