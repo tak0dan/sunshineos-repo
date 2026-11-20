@@ -14,9 +14,12 @@ docker run --rm -e HOST_UID="$(id -u)" -e HOST_GID="$(id -g)" -v "$PWD/packages:
   set -e
   id builder &>/dev/null || useradd -m builder
   mkdir -p /build && chown builder /build
+  if [ -d /packages/sunshine-update ] && ! command -v cargo >/dev/null 2>&1; then
+    pacman -Syu --noconfirm --needed rust >/dev/null
+  fi
   for d in /packages/*/; do
     p=$(basename "$d"); [ -f "$d/PKGBUILD" ] || continue
-    sudo -u builder bash -c "rm -rf /build/$p && cp -r /packages/$p /build/$p && cd /build/$p && makepkg -df --noconfirm >/tmp/build-$p.log 2>&1" \
+    sudo -H -u builder bash -c "rm -rf /build/$p && cp -r /packages/$p /build/$p && cd /build/$p && makepkg -df --noconfirm >/tmp/build-$p.log 2>&1" \
       || { echo "FAILED: $p"; tail -20 /tmp/build-$p.log; exit 1; }
     rm -f /out/$p-[0-9]*.pkg.tar.zst; cp /build/$p/*.pkg.tar.zst /out/   # as root: the builder user cannot write to a host-owned directory
     echo "built $p"

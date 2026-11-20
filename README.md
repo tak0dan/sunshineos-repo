@@ -33,10 +33,14 @@ Rules: it never removes your packages or your files; it does not touch the bootl
 ## Layout (planned)
 
 ```
-packages/      PKGBUILDs of everything that is not in the official repos (sunshine-base, sunshine-store, ...)
+packages/      PKGBUILDs of everything that is not in the official repos (sunshine-base, sunshine-update, sunshine-store, ...)
 package-list/  the single list of packages; the ISO build and sunshine-base both read it
 scripts/       build-repo.sh (build, sign, repo-add), publish.sh (upload to the `repo` release)
 TODO.md        steps and open decisions
 ```
+
+`sunshine-update` is the dedicated package that owns `/usr/bin/sunshine-update` and ships the
+Evolution Engine; `sunshine-base` keeps the update helpers/notifier but no longer installs that
+entry point.
 
 See [TODO.md](TODO.md).

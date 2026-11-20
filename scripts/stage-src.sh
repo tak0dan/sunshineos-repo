@@ -14,7 +14,7 @@ T=$(mktemp -d); trap 'rm -rf "$T"' EXIT
 
 # ---- sunshine-base
 B=$T/base; mkdir -p "$B/usr/bin" "$B/usr/share" "$B/usr/lib/systemd/user" "$B/etc/grub.d"
-for s in doctor identity info update update-notifier update-run toolbox welcome pet pods term prompt session session-notice set-shell \
+for s in doctor identity info update-notifier update-run toolbox welcome pet pods term prompt session session-notice set-shell \
          snapshot snapshots-setup cleanup boot-repair fix-pacman fastfetch-patch hyprland-install plasma-setup nixos-grub crypt-setup repo apps webapp topbar update-check rescue kernel performance gaming drivers desktops toolsync migrate pacnew reset-plasma fix support backup state-hook health-scan game-run secureboot diagnose restore-visuals theme-wallpapers windfall-default; do
   [ -f "$A/usr/local/bin/sunshine-$s" ] && install -m755 "$A/usr/local/bin/sunshine-$s" "$B/usr/bin/sunshine-$s" || echo "note: sunshine-$s not in the checkout"
 done
@@ -30,7 +30,7 @@ mkdir -p "$B/usr/share/pacman/keyrings"; cp -a "$A"/usr/share/pacman/keyrings/su
 install -m755 "$A/etc/grub.d/42_nixos" "$B/etc/grub.d/42_nixos"
 for d in libalpm aurorae color-schemes icons pixmaps plasma sddm sunshine-store wallpapers; do cp -a "$A/usr/share/$d" "$B/usr/share/"; done
 mkdir -p "$B/usr/share/applications" "$B/usr/share/grub"
-cp -a "$A"/usr/share/applications/sunshine-*.desktop "$B/usr/share/applications/"; rm -f "$B/usr/share/applications/sunshine-install.desktop"
+cp -a "$A"/usr/share/applications/sunshine-*.desktop "$B/usr/share/applications/"; rm -f "$B/usr/share/applications/sunshine-install.desktop" "$B/usr/share/applications/sunshine-update.desktop"
 cp -a "$A/usr/share/grub/themes" "$B/usr/share/grub/"
 rsync -a --exclude=/hyprland --exclude=/pkgs "$A/usr/share/sunshine/" "$B/usr/share/sunshine/"   # includes apps-setup/, catalogue.toml
 mkdir -p "$B/usr/share/sunshine/package-lists"; cp "$HERE"/package-list/*.txt "$B/usr/share/sunshine/package-lists/"
@@ -46,6 +46,15 @@ missing=$(grep -rhoE '^(Exec|ExecStart|ExecStartPre|ExecStartPost|ExecStop)[[:sp
 [ -z "$missing" ] || { echo "sunshine-base: referenced but not packaged (add them to the tool list):" $missing >&2; exit 1; }
 normalise "$B"; pack "$B" "$HERE/packages/sunshine-base/sunshine-base-src.tar.zst"
 echo "sunshine-base source: $(du -h "$HERE/packages/sunshine-base/sunshine-base-src.tar.zst" | cut -f1)"
+
+# ---- sunshine-update: the dedicated update command and the Evolution Engine
+# The wrapper and the engine sources live in this repo; sunshine-base keeps the update-run helper and notifier.
+U=$T/update; mkdir -p "$U/usr/bin" "$U/usr/lib/sunshine/evolution-engine" "$U/usr/share/applications"
+install -m755 "$HERE/packages/sunshine-update/sunshine-update" "$U/usr/bin/sunshine-update"
+cp -a "$HERE/packages/sunshine-update/engine/." "$U/usr/lib/sunshine/evolution-engine/"
+cp -a "$HERE/packages/sunshine-update/sunshine-update.desktop" "$U/usr/share/applications/"
+normalise "$U"; pack "$U" "$HERE/packages/sunshine-update/sunshine-update-src.tar.zst"
+echo "sunshine-update source: $(du -h "$HERE/packages/sunshine-update/sunshine-update-src.tar.zst" | cut -f1)"
 
 # ---- sunshine-payload: the Hyprland dots, Python venv, session files (applied by sunshine-doctor / sunshine-payload-apply)
 P=$A/usr/share/sunshine/hyprland

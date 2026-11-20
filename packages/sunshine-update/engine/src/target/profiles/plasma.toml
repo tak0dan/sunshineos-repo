@@ -1,0 +1,20 @@
+# KDE Plasma desktop profile.
+format_version = 1
+id = "plasma"
+name = "KDE Plasma"
+description = "Full KDE Plasma workspace with SDDM and the KDE applications base."
+
+required_capabilities = [
+  "desktop-session-discovery",
+  "sunshine-profile-management",
+  "network-connection",
+  "audio-pipewire",
+]
+packages = [
+  "plasma-desktop",
+  "plasma-workspace",
+  "sddm",
+  "konsole",
+  "dolphin",
+]
+conflicts = ["hyprland", "xfce", "gnome", "sway"]

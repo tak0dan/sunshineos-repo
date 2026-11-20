@@ -1,0 +1,32 @@
+# Generated component contract; keep in sync with current.toml.
+format_version = 1
+id = "core"
+name = "Core"
+description = "Managed Sunshine component: core"
+
+[version]
+software = "2026.1"
+schema = 3
+
+[provides]
+capabilities = [
+  "arch-foundation",
+  "systemd",
+  "pacman",
+]
+
+[requires]
+capabilities = [
+]
+
+[ownership]
+managed_paths = [
+  "/etc/sunshine/system.toml",
+  "/var/lib/sunshine/state",
+]
+
+[lifecycle]
+installable = true
+upgradeable = true
+replaceable = true
+removable = false

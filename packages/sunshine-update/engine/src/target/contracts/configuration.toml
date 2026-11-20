@@ -1,0 +1,33 @@
+# Generated component contract; keep in sync with current.toml.
+format_version = 1
+id = "configuration"
+name = "Configuration"
+description = "Managed Sunshine component: configuration"
+
+[version]
+software = "2026.1"
+schema = 4
+
+[provides]
+capabilities = [
+  "unified-configuration",
+  "configuration-ownership",
+]
+
+[requires]
+capabilities = [
+  "arch-foundation",
+  "systemd",
+]
+
+[ownership]
+managed_paths = [
+  "/etc/sunshine/config",
+  "/var/lib/sunshine/config",
+]
+
+[lifecycle]
+installable = true
+upgradeable = true
+replaceable = true
+removable = true

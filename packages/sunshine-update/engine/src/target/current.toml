@@ -1,0 +1,103 @@
+# Sunshine OS - current published target state.
+# Mirrors target.manifest.DEFAULT_TARGET_TOML; keep the two in sync.
+format_version = 1
+
+[target]
+release = "sunshine-2026.1"
+repository_generation = 7
+
+[components.core]
+schema = 3
+required = true
+software_version = "2026.1"
+lifecycle = "evolve"
+provides = ["arch-foundation", "systemd", "pacman"]
+requires = []
+
+[components.configuration]
+schema = 4
+required = true
+software_version = "2026.1"
+lifecycle = "evolve"
+provides = ["unified-configuration", "configuration-ownership"]
+requires = ["arch-foundation", "systemd"]
+
+[components.ownership]
+schema = 2
+required = true
+software_version = "2026.1"
+lifecycle = "evolve"
+provides = ["package-ownership-registry", "ownership-enforcement"]
+requires = ["pacman", "unified-configuration"]
+
+[components.kernel_management]
+schema = 2
+required = true
+software_version = "2026.1"
+lifecycle = "evolve"
+provides = ["kernel-installation", "kernel-fallback"]
+requires = ["arch-foundation", "pacman"]
+
+[components.boot_integration]
+schema = 2
+required = true
+software_version = "2026.1"
+lifecycle = "evolve"
+provides = ["boot-entry-management", "bootloader-configuration"]
+requires = ["kernel-installation", "unified-configuration"]
+
+[components.recovery]
+schema = 3
+required = true
+software_version = "2026.1"
+lifecycle = "evolve"
+provides = ["recovery-checkpoints", "migration-recovery", "rollback"]
+requires = ["unified-configuration", "ownership-enforcement", "boot-entry-management"]
+
+[components.desktop_integration]
+schema = 4
+required = true
+software_version = "2026.1"
+lifecycle = "evolve"
+provides = ["desktop-session-discovery", "sunshine-profile-management"]
+requires = ["unified-configuration", "package-ownership-registry"]
+
+# Nix is tolerated but not mandated. The resolver activates this component only
+# when Nix is actually observed, so a clean Arch machine never gets Nix pushed
+# onto it by the desired state.
+[components.nix_integration]
+schema = 2
+required = false
+software_version = "2026.1"
+lifecycle = "introduce"
+provides = ["nix-integration", "foreign-package-visibility"]
+requires = ["pacman", "package-ownership-registry"]
+
+[policies]
+preserve_user_configuration = true
+preserve_user_packages = true
+require_signed_packages = true
+
+# Package sets are declarations of intent, not an install list by themselves.
+# Empty sets are placeholders that the resolver fills from observations/profiles:
+#   desktop_integration <- selected desktop profile packages
+#   bootloader/network/audio <- preserved user choices ("<category>.<choice>" sets)
+#   nix_integration <- "nix.optional" when Nix is present
+[package_sets]
+base = ["base", "systemd", "pacman", "dbus", "sudo"]
+configuration = ["sunshine-base", "jq"]
+ownership = ["sunshine-base"]
+kernel_management = ["linux", "linux-headers", "linux-firmware", "mkinitcpio"]
+boot_integration = ["os-prober"]
+recovery = ["rsync", "btrfs-progs"]
+desktop_integration = []
+nix_integration = []
+
+"bootloader.grub" = ["grub", "efibootmgr"]
+"bootloader.systemd-boot" = ["systemd", "efibootmgr"]
+"bootloader.refind" = ["refind"]
+"network.networkmanager" = ["networkmanager"]
+"network.systemd-networkd" = ["systemd"]
+"audio.pipewire" = ["pipewire", "pipewire-pulse", "wireplumber"]
+"audio.pulseaudio" = ["pulseaudio", "pulseaudio-alsa"]
+"nix.optional" = ["nix"]

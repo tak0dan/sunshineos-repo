@@ -1,0 +1,19 @@
+# GNOME desktop profile.
+format_version = 1
+id = "gnome"
+name = "GNOME"
+description = "GNOME Shell workspace with GDM and the core GNOME applications."
+
+required_capabilities = [
+  "desktop-session-discovery",
+  "sunshine-profile-management",
+  "network-connection",
+  "audio-pipewire",
+]
+packages = [
+  "gnome-shell",
+  "gnome",
+  "gdm",
+  "gnome-terminal",
+]
+conflicts = ["plasma", "hyprland", "xfce", "sway"]

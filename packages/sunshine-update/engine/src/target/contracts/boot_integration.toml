@@ -1,0 +1,34 @@
+# Generated component contract; keep in sync with current.toml.
+format_version = 1
+id = "boot_integration"
+name = "Boot Integration"
+description = "Managed Sunshine component: boot_integration"
+
+[version]
+software = "2026.1"
+schema = 2
+
+[provides]
+capabilities = [
+  "boot-entry-management",
+  "bootloader-configuration",
+]
+
+[requires]
+capabilities = [
+  "kernel-installation",
+  "unified-configuration",
+]
+
+[ownership]
+managed_paths = [
+  "/boot/grub/grub.cfg",
+  "/boot/loader/entries",
+  "/var/lib/sunshine/boot",
+]
+
+[lifecycle]
+installable = true
+upgradeable = true
+replaceable = true
+removable = true

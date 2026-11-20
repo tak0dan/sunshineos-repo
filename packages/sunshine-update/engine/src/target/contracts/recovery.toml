@@ -1,0 +1,35 @@
+# Generated component contract; keep in sync with current.toml.
+format_version = 1
+id = "recovery"
+name = "Recovery"
+description = "Managed Sunshine component: recovery"
+
+[version]
+software = "2026.1"
+schema = 3
+
+[provides]
+capabilities = [
+  "recovery-checkpoints",
+  "migration-recovery",
+  "rollback",
+]
+
+[requires]
+capabilities = [
+  "unified-configuration",
+  "ownership-enforcement",
+  "boot-entry-management",
+]
+
+[ownership]
+managed_paths = [
+  "/etc/sunshine/recovery.toml",
+  "/var/lib/sunshine/recovery",
+]
+
+[lifecycle]
+installable = true
+upgradeable = true
+replaceable = true
+removable = true

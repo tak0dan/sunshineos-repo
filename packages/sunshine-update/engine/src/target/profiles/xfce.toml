@@ -1,0 +1,18 @@
+# XFCE desktop profile.
+format_version = 1
+id = "xfce"
+name = "XFCE"
+description = "Lightweight XFCE workspace with the LightDM display manager."
+
+required_capabilities = [
+  "desktop-session-discovery",
+  "sunshine-profile-management",
+  "network-connection",
+]
+packages = [
+  "xfce4",
+  "xfce4-goodies",
+  "lightdm",
+  "lightdm-gtk-greeter",
+]
+conflicts = ["plasma", "hyprland", "gnome", "sway"]

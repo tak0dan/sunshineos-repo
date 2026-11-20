@@ -1,0 +1,19 @@
+# Hyprland tiling Wayland compositor profile.
+format_version = 1
+id = "hyprland"
+name = "Hyprland"
+description = "Hyprland compositor with a status bar, launcher and portal support."
+
+required_capabilities = [
+  "desktop-session-discovery",
+  "sunshine-profile-management",
+  "network-connection",
+  "audio-pipewire",
+]
+packages = [
+  "hyprland",
+  "waybar",
+  "wofi",
+  "xdg-desktop-portal-hyprland",
+]
+conflicts = ["plasma", "xfce", "gnome", "sway"]

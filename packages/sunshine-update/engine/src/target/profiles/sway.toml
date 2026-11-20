@@ -1,0 +1,18 @@
+# Sway tiling Wayland compositor profile.
+format_version = 1
+id = "sway"
+name = "Sway"
+description = "Sway compositor with a minimal status bar, menu and terminal."
+
+required_capabilities = [
+  "desktop-session-discovery",
+  "sunshine-profile-management",
+  "network-connection",
+]
+packages = [
+  "sway",
+  "swaybg",
+  "dmenu",
+  "foot",
+]
+conflicts = ["plasma", "hyprland", "xfce", "gnome"]

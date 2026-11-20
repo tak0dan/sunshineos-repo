@@ -1,0 +1,33 @@
+# Generated component contract; keep in sync with current.toml.
+format_version = 1
+id = "nix_integration"
+name = "Nix Integration"
+description = "Managed Sunshine component: nix_integration"
+
+[version]
+software = "2026.1"
+schema = 2
+
+[provides]
+capabilities = [
+  "nix-integration",
+  "foreign-package-visibility",
+]
+
+[requires]
+capabilities = [
+  "pacman",
+  "package-ownership-registry",
+]
+
+[ownership]
+managed_paths = [
+  "/etc/nix/nix.conf",
+  "/var/lib/sunshine/nix",
+]
+
+[lifecycle]
+installable = true
+upgradeable = true
+replaceable = true
+removable = true

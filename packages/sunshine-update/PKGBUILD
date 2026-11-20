@@ -1,0 +1,37 @@
+# Maintainer: tak0dan
+pkgname=sunshine-update
+pkgver=1.0.0
+pkgrel=1
+pkgdesc="Sunshine OS update command: Evolution Engine (Stage A bootstrap and Python Core) and the /usr/bin/sunshine-update entry point"
+arch=('x86_64')
+url="https://github.com/tak0dan/SunshineOS"
+license=('MIT')
+depends=('bash' 'python' 'pacman' 'coreutils' 'findutils' 'systemd' 'gnupg' 'sudo' 'curl' 'rsync' 'sunshine-base>=0.9')
+makedepends=('rust')
+options=('!debug')
+optdepends=('polkit: privilege prompt from the desktop launcher'
+            'flatpak: update Flatpak applications'
+            'paru: update AUR applications (yay also works)')
+source=(sunshine-update-src.tar.zst)
+sha256sums=('SKIP')
+noextract=(sunshine-update-src.tar.zst)
+
+prepare() {
+  mkdir -p "$srcdir/tree"
+  tar --zstd -xf "$srcdir/sunshine-update-src.tar.zst" -C "$srcdir/tree" --no-same-owner
+}
+
+build() {
+  cd "$srcdir/tree/usr/lib/sunshine/evolution-engine/bootstrap-rust"
+  cargo build --release --locked --offline
+}
+
+package() {
+  cp -a "$srcdir/tree/usr" "$pkgdir/"
+  install -Dm755 \
+    "$srcdir/tree/usr/lib/sunshine/evolution-engine/bootstrap-rust/target/release/sunshine-bootstrap" \
+    "$pkgdir/usr/lib/sunshine/evolution-engine/bootstrap-rust/sunshine-bootstrap"
+  rm -rf "$pkgdir/usr/lib/sunshine/evolution-engine/bootstrap-rust/target"
+  find "$pkgdir/usr/lib/sunshine/evolution-engine" -type d -name __pycache__ -prune -exec rm -rf {} +
+  chmod 755 "$pkgdir/usr/bin/sunshine-update"
+}

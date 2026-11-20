@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Update System
+Comment=Update Sunshine OS and your apps safely
+Exec=/usr/bin/sunshine-update
+Icon=system-software-update
+Categories=System;

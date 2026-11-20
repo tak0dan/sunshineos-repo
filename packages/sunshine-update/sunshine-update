@@ -1,0 +1,114 @@
+#!/usr/bin/env bash
+# Dedicated Sunshine OS update command.
+#
+# With no arguments this converges the machine to the current Sunshine OS by
+# handing control to the Evolution Engine (Stage A bootstrap when the signed
+# trust material is provisioned, Python Core otherwise). Explicit engine modes
+# (--check, --plan, --apply, --verify, --repair, --history) are passed through.
+set -uo pipefail
+
+ENGINE=${SUNSHINE_ENGINE_DIR:-/usr/lib/sunshine/evolution-engine}
+CORE="$ENGINE/src/engine.py"
+BOOTSTRAP="$ENGINE/bootstrap-rust/sunshine-bootstrap"
+POLICY=/etc/sunshine/trust/trust-policy.json
+INDEX=/var/lib/sunshine/trust/index.json
+KEYRING=/usr/share/sunshine/trust/repository-root.gpg
+REPORT=/run/sunshine/stage-a.json
+RECEIPT=/run/sunshine/handoff-receipt.json
+
+die() { printf 'sunshine-update: %s\n' "$*" >&2; exit 1; }
+
+if [ "$(id -u)" -ne 0 ]; then
+  if command -v sudo >/dev/null 2>&1; then exec sudo "$0" "$@"; fi
+  if command -v pkexec >/dev/null 2>&1; then exec pkexec "$0" "$@"; fi
+  die "run as root"
+fi
+[ -f "$CORE" ] || die "Evolution Engine not found at $CORE"
+
+# Run the engine. When the signed Stage A material exists, the Rust bootstrap
+# verifies it and exec()s Core with a signed receipt. Until that material is
+# published (see README.md in this package) Core runs directly; it still
+# discovers the machine and converges it, but without the signed handoff.
+run_engine() {
+  local -a user_args=("$@")
+  local direct=0 a
+  for a in "${user_args[@]}"; do
+    case "$a" in --trust-*) direct=1;; esac
+  done
+  if [ "$direct" -eq 0 ] && [ -x "$BOOTSTRAP" ] &&
+     [ -f "$POLICY" ] && [ -f "$INDEX" ] && [ -f "$KEYRING" ]; then
+    mkdir -p /run/sunshine
+    "$BOOTSTRAP" handoff \
+      --policy "$POLICY" --index "$INDEX" --keyring "$KEYRING" \
+      --report "$REPORT" --receipt "$RECEIPT" \
+      -- "${user_args[@]}"
+    return $?
+  fi
+  if [ "$direct" -eq 0 ] && { [ -e "$POLICY" ] || [ -e "$INDEX" ] || [ -e "$KEYRING" ]; }; then
+    die "Stage A trust material is incomplete (need $POLICY, $INDEX, $KEYRING); refusing to transform"
+  fi
+  python3 "$CORE" "${user_args[@]}"
+}
+
+args=("$@")
+# Legacy desktop/terminal launcher spelling: converge in the current terminal.
+if [ "${1:-}" = --window ]; then args=("${args[@]:1}"); fi
+
+mode=
+for a in "${args[@]}"; do
+  case "$a" in
+    --check|--plan|--apply|--verify|--repair|--history) mode=$a;;
+  esac
+done
+
+if [ -n "$mode" ]; then
+  run_engine "${args[@]}"
+  exit $?
+fi
+
+# Default: discover, answer any unresolved decisions, then apply and verify.
+plan_file=$(mktemp); trap 'rm -f "$plan_file"' EXIT
+if ! run_engine --plan "${args[@]}" > "$plan_file"; then
+  cat "$plan_file" >&2
+  die "planning failed"
+fi
+
+declare -a decisions=()
+while IFS=$'\t' read -r id options question; do
+  [ -n "$id" ] || continue
+  decisions+=("$id"$'\t'"$options"$'\t'"$question")
+done < <(python3 - "$plan_file" <<'PY'
+import json, sys
+with open(sys.argv[1], encoding="utf-8") as fh:
+    plan = json.load(fh)
+for decision in plan.get("decisions", []):
+    if decision.get("requires_user_input"):
+        options = [str(o) for o in decision.get("options", [])]
+        print("\t".join((str(decision.get("id", "")), "|".join(options),
+                         str(decision.get("question", "")))))
+PY
+)
+
+final=(--apply "${args[@]}")
+for entry in "${decisions[@]}"; do
+  IFS=$'\t' read -r id options question <<<"$entry"
+  default=${options%%|*}
+  case "|$options|" in *"|hyprland|"*) default=hyprland;; esac
+  case "|$options|" in *"|plasma|"*) default=${default:-plasma};; esac
+  if [ "$id" = desktop-profile ] && [ -n "${SUNSHINE_DESKTOP_PROFILE:-}" ]; then
+    default=$SUNSHINE_DESKTOP_PROFILE
+  fi
+  if [ -t 0 ]; then
+    printf 'sunshine-update: %s\n  choices: %s\n  default [%s]: ' "$question" "$options" "$default" >&2
+    IFS= read -r answer || answer=
+    [ -n "$answer" ] && default=$answer
+  fi
+  final+=(--decide "$id=$default")
+done
+
+run_engine "${final[@]}" || exit $?
+if verify_json=$(run_engine --verify "${args[@]}"); then
+  printf '%s\n' "$verify_json" >&2
+else
+  echo "sunshine-update: post-update verification reported a problem" >&2
+fi

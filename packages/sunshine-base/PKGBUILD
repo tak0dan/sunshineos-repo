@@ -1,13 +1,14 @@
 # Maintainer: tak0dan
 pkgname=sunshine-base
-pkgver=0.8
+pkgver=0.9
 pkgrel=1
 pkgdesc="Sunshine OS tools, hooks, identity, store and package lists for an Arch based system"
 arch=('any')
 url="https://github.com/tak0dan/SunshineOS"
 license=('MIT')
 depends=('bash' 'sudo' 'rsync' 'git' 'python' 'uni-pkg-git' 'snapper')
-optdepends=('sunshine-payload: the Hyprland desktop (dots, Python venv)')
+optdepends=('sunshine-payload: the Hyprland desktop (dots, Python venv)'
+            'sunshine-update: the dedicated update command /usr/bin/sunshine-update')
 backup=('etc/sunshine/snapshots.conf')
 source=(sunshine-base-src.tar.zst)
 sha256sums=('SKIP')
